@@ -230,6 +230,7 @@ class color:
             'yellow'                 :  '1.00 1.00 0.00',
             'yellowgreen'            :  '0.60 0.80 0.20',
         }
+	self.grayscale = False
         return
 
     # converts floating point value (from 0->1) to
@@ -246,7 +247,19 @@ class color:
         if color not in self.color_list:
             print('color [%s] not valid; returning 0 0 0' % color)
             return '0 0 0'
+	if self.grayscale:
+	    r,g,b = self.color_list[color].split()
+	    gray = self.rgb_to_gray(r, g, b)
+	    gray_color =  str(gray) + ' ' + str(gray) + ' ' + str(gray) 
+	    return gray_color
         return self.color_list[color]
+	
+    def set_grayscale(self, isgray):
+	self.grayscale = isgray
+    
+    # RGB2Gray:0.29894 * red + 0.58704 * green + 0.11402 * blue
+    def rgb_to_gray(self, r, g, b):
+	return 0.29894 * float(r) + 0.58704 * float(g) + 0.11402 * float(b) 
 
     # Get color as hex value of form "#RRGGBB"
     def get_as_hex(self, color):
@@ -264,6 +277,11 @@ class color:
                 r, g, b = 0.0, 0.0, 0.0
             else:
                 r, g, b = self.color_list[color].split()
+	if self.grayscale:
+	    r = _rgb_to_gray(r, g, b)
+	    g = r
+	    b = r
+	
         return '#%s%s%s' % (self.__float_to_rgb(r),
                             self.__float_to_rgb(g),
                             self.__float_to_rgb(b))
@@ -712,6 +730,7 @@ class postscript_drawer:
                  script,
                  width,
                  height,
+		 grayscale,
                  ):
         self.colors = colors
         self.fontinfo = fontinfo
@@ -723,6 +742,7 @@ class postscript_drawer:
         self.script = script
         self.width = width
         self.height = height
+	self.grayscale = grayscale
         self.date = str(time.strftime('%X %x %Z'))
 
         self.gsave_cnt = 0
@@ -906,6 +926,9 @@ class postscript_drawer:
         tmp = value.split(',')
         if len(tmp) > 1:
             c = '%s %s %s' % (tmp[0], tmp[1], tmp[2])
+	    if self.grayscale:
+		gray = self.colors.rgb_to_gray(tmp[0], tmp[1], tmp[2])
+            c = '%s %s %s' % (str(gray), str(gray), str(gray))
         else:
             c = self.colors.get(value)
         self.writer.out(c + ' sc')
@@ -1721,6 +1744,9 @@ class canvas:
 
                  # Name of the file calling into zplot; recorded in header.
                  script = __file__,
+		 
+		 # generate gray graph
+		 isgrayscale = False,
                  ):
         self.canvas_type = canvas_type
         self.title = title
@@ -1733,6 +1759,10 @@ class canvas:
         self.version = 'python version 1.41'
 
         self.colors = color()
+	self.isgrayscale = isgrayscale
+	if isgrayscale:
+	    self.colors.set_grayscale(True)
+
         self.fontinfo = fontsize()
         
         self.output_file = title + '.' + canvas_type
@@ -1748,7 +1778,7 @@ class canvas:
                                             default_font=self.default_font, writer=self.writer,
                                             title=self.title, program=self.program,
                                             version=self.version, script=self.script,
-                                            width=self.width, height=self.height)
+                                            width=self.width, height=self.height, grayscale=self.isgrayscale)
         elif self.canvas_type == 'pdf':
             self.drawer = pdf_drawer(colors=self.colors, fontinfo=self.fontinfo,
                                      default_font=self.default_font, writer=self.writer,
@@ -2668,10 +2698,10 @@ class canvas:
 # (they used to be separate classes; now all handled by unified 'canvas' class)
 # 
 def postscript(title='default', dimensions=['3in','2in'],
-               font='Helvetica', verbose=False, script=__file__):
+               font='Helvetica', verbose=False, script=__file__, isgrayscale=False):
     title_parts = title.split('.')
     return canvas(title_parts[1], title_parts[0], dimensions, font,
-                  verbose, script)
+                  verbose, script, isgrayscale)
     
 def pdf(title='default', dimensions=['3in','2in'],
         font='Helvetica', verbose=False, script=__file__):
