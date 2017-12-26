@@ -3932,7 +3932,7 @@ class plotter:
 
             x1 = drawable.translate('x', x) - (barwidth/2.0) + (ubarwidth * n)
             y1 = drawable.translate('y', ylo)
-            x2 = x1 + (barwidth/clusters)
+            x2 = x1 + ubarwidth
             y2 = drawable.translate('y', y)
 
             # auto set anchor, etc.
@@ -3948,7 +3948,7 @@ class plotter:
 
             if labelfield != '':
                 label  = labelformat % r[labelindex]
-                xlabel = x1 + (barwidth/2.0) + labelshift[0]
+                xlabel = x1 + ubarwidth/2.0 + labelshift[0]
                 ylabel = drawable.translate('y', y) + place + labelshift[1]
                 canvas.text(coord=[xlabel,ylabel], text=label, anchor=anchor,
                             rotate=labelrotate, font=labelfont, size=labelsize,
