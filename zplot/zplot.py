@@ -230,7 +230,7 @@ class color:
             'yellow'                 :  '1.00 1.00 0.00',
             'yellowgreen'            :  '0.60 0.80 0.20',
         }
-	self.grayscale = False
+        self.grayscale = False
         return
 
     # converts floating point value (from 0->1) to
@@ -247,15 +247,15 @@ class color:
         if color not in self.color_list:
             print('color [%s] not valid; returning 0 0 0' % color)
             return '0 0 0'
-	if self.grayscale:
-	    r,g,b = self.color_list[color].split()
-	    gray = self.rgb_to_gray(r, g, b)
-	    gray_color =  str(gray) + ' ' + str(gray) + ' ' + str(gray) 
-	    return gray_color
+        if self.grayscale:
+            r,g,b = self.color_list[color].split()
+            gray = self.rgb_to_gray(r, g, b)
+            gray_color =  str(gray) + ' ' + str(gray) + ' ' + str(gray) 
+            return gray_color
         return self.color_list[color]
 	
     def set_grayscale(self, isgray):
-	self.grayscale = isgray
+        self.grayscale = isgray
     
     # RGB2Gray:0.29894 * red + 0.58704 * green + 0.11402 * blue
     def rgb_to_gray(self, r, g, b):
@@ -277,10 +277,10 @@ class color:
                 r, g, b = 0.0, 0.0, 0.0
             else:
                 r, g, b = self.color_list[color].split()
-	if self.grayscale:
-	    r = _rgb_to_gray(r, g, b)
-	    g = r
-	    b = r
+        if self.grayscale:
+            r = _rgb_to_gray(r, g, b)
+            g = r
+            b = r
 	
         return '#%s%s%s' % (self.__float_to_rgb(r),
                             self.__float_to_rgb(g),
@@ -730,7 +730,7 @@ class postscript_drawer:
                  script,
                  width,
                  height,
-		 grayscale,
+		         grayscale,
                  ):
         self.colors = colors
         self.fontinfo = fontinfo
@@ -742,7 +742,7 @@ class postscript_drawer:
         self.script = script
         self.width = width
         self.height = height
-	self.grayscale = grayscale
+        self.grayscale = grayscale
         self.date = str(time.strftime('%X %x %Z'))
 
         self.gsave_cnt = 0
@@ -926,9 +926,9 @@ class postscript_drawer:
         tmp = value.split(',')
         if len(tmp) > 1:
             c = '%s %s %s' % (tmp[0], tmp[1], tmp[2])
-	    if self.grayscale:
-		gray = self.colors.rgb_to_gray(tmp[0], tmp[1], tmp[2])
-            c = '%s %s %s' % (str(gray), str(gray), str(gray))
+            if self.grayscale:
+                gray_val = self.colors.rgb_to_gray(tmp[0], tmp[1], tmp[2])
+                c = '%s %s %s' % (str(gray_val), str(gray_val), str(gray_val))
         else:
             c = self.colors.get(value)
         self.writer.out(c + ' sc')
@@ -1745,8 +1745,8 @@ class canvas:
                  # Name of the file calling into zplot; recorded in header.
                  script = __file__,
 		 
-		 # generate gray graph
-		 isgrayscale = False,
+		         # generate gray graph
+                 isgrayscale = False,
                  ):
         self.canvas_type = canvas_type
         self.title = title
@@ -1759,9 +1759,9 @@ class canvas:
         self.version = 'python version 1.41'
 
         self.colors = color()
-	self.isgrayscale = isgrayscale
-	if isgrayscale:
-	    self.colors.set_grayscale(True)
+        self.isgrayscale = isgrayscale
+        if isgrayscale:
+            self.colors.set_grayscale(True)
 
         self.fontinfo = fontsize()
         
