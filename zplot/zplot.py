@@ -72,6 +72,8 @@ import random
 import types
 import string
 
+import pandas as pd
+
 #
 # UTILITY function(s)
 #
@@ -3010,6 +3012,8 @@ class table:
                  ):
         self.file = file
         self.cnames = []
+        self.__is_csv = False
+        self.__df = None
 
         data = []
 
@@ -3030,43 +3034,54 @@ class table:
             # generate unique name - undoubtedly not the way to do this.
             self.dbname = 'tmp' + str(random.randint(0,9999999))
         elif self.file != '':
-            # first, look for schema
-            fd = open(self.file, 'r')
-            line = fd.readline().strip()
-            if separator == '':
-                separator = None
-            tmp = line.split(separator)
-            if (len(tmp) > 0) and (tmp[0] == '#'):
-                # there is a schema, decode it
-                self.columns = len(tmp)
+            if self.file[-4:] == '.csv':
+                # handle csv file here
+                self.__df = pd.read_csv(self.file)
+                self.__is_csv = True
+                # init cnames
                 self.cnames.append('rownumber')
-                for i in range(1, self.columns):
-                    self.cnames.append(tmp[i].strip())
+                for col in self.__df.columns:
+                    self.cnames.append(col)
+                self.columns = len(self.cnames)
+                self.dbname = 'tmp' + str(random.randint(0,9999999))
             else:
-                # no schema: just assign column names c0, c1, etc.
-                self.columns = len(tmp) + 1
-                self.cnames.append('rownumber')
-                for i in range(0, self.columns):
-                    self.cnames.append('c'+str(i))
-            fd.close()
-
-            # open again for reading ...
-            fd = open(self.file, 'r')
-            for line in fd:
-                line = line.strip()
+                # first, look for schema
+                fd = open(self.file, 'r')
+                line = fd.readline().strip()
+                if separator == '':
+                    separator = None
                 tmp = line.split(separator)
-                if (len(tmp) > 0) and (tmp[0] != '') and (tmp[0][0] != '#'):
-                    curlen = len(tmp)
-                    if curlen != (self.columns - 1):
-                        abort('Bad input row! (%s)' % line)
-                    ntmp = []
-                    for d in tmp:
-                        ntmp.append(d.strip())
-                    data.append(ntmp)
-            fd.close()
+                if (len(tmp) > 0) and (tmp[0] == '#'):
+                    # there is a schema, decode it
+                    self.columns = len(tmp)
+                    self.cnames.append('rownumber')
+                    for i in range(1, self.columns):
+                        self.cnames.append(tmp[i].strip())
+                else:
+                    # no schema: just assign column names c0, c1, etc.
+                    self.columns = len(tmp) + 1
+                    self.cnames.append('rownumber')
+                    for i in range(0, self.columns):
+                        self.cnames.append('c'+str(i))
+                fd.close()
 
-            # extract unique number from file, somehow
-            self.dbname = 'tmp' + str(random.randint(0,9999999))
+                # open again for reading ...
+                fd = open(self.file, 'r')
+                for line in fd:
+                    line = line.strip()
+                    tmp = line.split(separator)
+                    if (len(tmp) > 0) and (tmp[0] != '') and (tmp[0][0] != '#'):
+                        curlen = len(tmp)
+                        if curlen != (self.columns - 1):
+                            abort('Bad input row! (%s)' % line)
+                        ntmp = []
+                        for d in tmp:
+                            ntmp.append(d.strip())
+                        data.append(ntmp)
+                fd.close()
+
+                # extract unique number from file, somehow
+                self.dbname = 'tmp' + str(random.randint(0,9999999))
         else:
             self.cnames  = ['rownumber']
             self.columns = 1
@@ -3090,8 +3105,12 @@ class table:
         self.rindex  = {}
         for i in range(0, self.columns):
             self.rindex[self.cnames[i]] = i
-        self.cursor.execute(create)
-        self.fd.commit()
+
+        if self.__is_csv:
+            self.__df.to_sql(self.dbname, con=self.fd)
+        else:
+            self.cursor.execute(create)
+            self.fd.commit()
 
         # now, insert values
         insert = 'insert into %s values (' % self.dbname
