@@ -1233,6 +1233,12 @@ class pdf_drawer:
                     (x1, y1, x2, y2, x3, y3))
         return
 
+    # pdf_drawer: scale
+    def scale(self, x, y):
+        # self.writer.out(str(x) + ' ' + str(y) + ' scale')
+        self.__out('%f 0 0 %f 0 0 cm' % (x, y))
+        return
+
     # pdf_drawer: circle
     def circle(self, x, y, radius):
         # Have to assemble the circle from bezier curves(!)
@@ -1569,9 +1575,15 @@ class svg_drawer:
         self.current_linedash = outdash
         return
 
-    # pdf_drawer: setpattern
+    # svg_drawer: setpattern
     def setpattern(self, pattern):
         self.current_pattern = pattern
+        return
+
+    # svg_drawer: scale
+    def scale(self, x, y):
+        # self.writer.out(str(x) + ' ' + str(y) + ' scale')
+        print('svg_drawer: scale not implemented')
         return
 
     # svg_drawer: newpath
@@ -1592,6 +1604,7 @@ class svg_drawer:
             self.__out('<path d="')
         return
 
+    # svg_drawer: circle
     def circle(self, x, y, radius):
         self.__outnl('cx="%.2f" cy="%.2f" r="%.2f" ' % (x, self.__converty(y),
                                                         radius))
@@ -2488,7 +2501,7 @@ class canvas:
     # Based on cubic bezier curves.
     #
     def __circle(self, drawer, coord, radius, linecolor, linewidth, linedash,
-                 fill, fillcolor, fillstyle, fillsize, fillskip):
+                 fill, fillcolor, fillstyle, fillsize, fillskip, scale):
         xc, yc = coord[0], coord[1]
         radius = float(radius)
 
@@ -2502,8 +2515,9 @@ class canvas:
             drawer.setlinedash(linedash)
         if fill:
             drawer.setfillcolor(fillcolor)
-
-        drawer.circle(xc, yc, radius)
+        
+        drawer.scale(scale[0], scale[1])
+        drawer.circle(xc / scale[0], yc / scale[1], radius)
         
         if fill:
             drawer.fill()
@@ -2558,8 +2572,10 @@ class canvas:
         drawer = self.drawer
         if bgcolor != '' and fillstyle != 'solid':
             self.__circle(drawer, coord, radius, linecolor, 0, 0,
-                          fill, bgcolor, 'solid', 0, 0)
+                          fill, bgcolor, 'solid', 0, 0, scale)
         if fill:
+            if scale[0] != 1 or scale[1] != 1:
+                print('warning: circle() filled pattern scaling not implemented')
             self.drawer.gsave()
             x, y = coord[0], coord[1]
             pattern_name = drawer.clipcircle(x, y, radius)
@@ -2570,7 +2586,7 @@ class canvas:
             self.drawer.grestore()
         if linewidth != 0:
             self.__circle(drawer, coord, radius, linecolor, linewidth, linedash,
-                          False, fillcolor, fillstyle, fillsize, fillskip)
+                          False, fillcolor, fillstyle, fillsize, fillskip, scale)
         return
 
 
