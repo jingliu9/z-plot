@@ -261,7 +261,7 @@ class color:
     
     # RGB2Gray:0.29894 * red + 0.58704 * green + 0.11402 * blue
     def rgb_to_gray(self, r, g, b):
-	return 0.29894 * float(r) + 0.58704 * float(g) + 0.11402 * float(b) 
+        return 0.29894 * float(r) + 0.58704 * float(g) + 0.11402 * float(b) 
 
     # Get color as hex value of form "#RRGGBB"
     def get_as_hex(self, color):
